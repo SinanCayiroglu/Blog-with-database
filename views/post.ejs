@@ -1,0 +1,16 @@
+<%- include("partials/header"); -%>
+<div class="container">
+  <h1><%=title%></h1>
+  <h2><%=author%></h2>
+  <p><%=content%></p>
+  <button type="button" class="btn btn-outline-danger btn-sm">
+    <a href="/create">Create a new post</a>
+</button>
+<button type="button" class="btn btn-outline-dark btn-sm">
+    <a href="/edit/<%= id %>">Edit</a>
+</button>
+<form action="/delete/<%= id %>" method="post" style="display: inline-block;">
+    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+</form>
+</div>
+<%- include("partials/footer"); -%>

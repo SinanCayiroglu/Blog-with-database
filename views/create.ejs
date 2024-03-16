@@ -1,0 +1,14 @@
+<%- include("partials/header.ejs") %>
+<div class="container">
+<form  method="POST" class="creation-form">
+    <h1>Create new post</h1>
+    <input type="text" id="title" name="author" placeholder="author">
+    <input type="text" id="title" name="title" placeholder="title">
+    <textarea name="content" rows="10" placeholder="Detail" required=""></textarea>    
+    <input type="submit" class="submit-create" value="create post" formaction="/create">
+    <input type="submit" class="submit-edit" value="edit post" formaction="/edit">
+    <input type="submit" class="submit-delete" value="delete post" formaction="/delete">
+
+  </form></div>>
+
+  <%- include("partials/footer.ejs") %>

@@ -1,0 +1,277 @@
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+footer {
+    margin-top: auto;
+    width: 100%;
+    background: #343434;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+  footer .social_icon {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+footer .social_icon li {
+  list-style: none;
+}
+footer .social_icon li a {
+  font-size: 2em;
+  color: #ccc;
+  margin: 0 10px;
+  display: inline-block;
+  transition: 0.5s;
+}
+footer .social_icon li a:hover {
+  transform: translateY(-15px);
+  color: blue;
+}
+
+.container-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Adjust as needed */
+}
+
+.creation-form {
+    max-width: 400px;
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.creation-form h1 {
+    text-align: center;
+    color: #333;
+}
+
+.creation-form input,
+.creation-form textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.creation-form textarea {
+    resize: vertical; /* Allow vertical resizing of textarea */
+}
+
+.creation-form input[type="submit"] {
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+}
+
+.creation-form input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+.form-contact{display: flex;
+flex-direction: column;
+align-items: center;}
+
+
+
+
+
+ul{list-style: none;}
+
+
+
+header{
+    background-color: #343434;
+}
+header ul{display: flex;
+align-items: flex-start;
+gap: 10px;
+}
+
+
+
+.header-list a{color: white;}
+
+
+.navbar{display: flex;
+justify-content: flex-start;
+align-items: center;
+}
+
+ 
+
+#contactme {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.form-contact {
+    width: 100%;
+}
+
+.feedback-input {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+textarea.feedback-input {
+    resize: vertical; /* Allow vertical resizing of textarea */
+}
+
+.form-contact input[type="submit"] {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.form-contact input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+header {
+    background-color: #333; /* Set your preferred background color */
+    color: #fff; /* Set your preferred text color */
+    padding: 10px 0; /* Add padding for better spacing */
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+
+
+
+.header-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.header-list li {
+    margin-right: 20px;
+}
+
+.header-list a {
+    text-decoration: none;
+    color: #fff; /* Set link color */
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.searchbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    
+}
+
+.search-bar {
+    margin-right: 20px;
+}
+
+.search-bar input[type="search"] {
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+}
+
+.search-bar button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.search-bar button:hover {
+    background-color: #45a049;
+}
+
+/* Style for login and signup buttons */
+
+.index-main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.index-main h1 {
+    font-size: 36px;
+    color: #333;
+}
+
+.index-main ul {
+    list-style: none;
+    padding: 0;
+}
+
+.index-main li {
+    margin-bottom: 20px;
+}
+
+.index-main h2 {
+    font-size: 24px;
+    color: #007bff; /* Set your preferred title color */
+}
+
+.index-main p {
+    color: #555;
+    line-height: 1.5;
+}
+
+/* Style for the "Create a new post" button */
+.index-main .btn-create-post {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.index-main .btn-create-post:hover {
+    background-color: #45a049;
+}
+
+/* Style for the "Edit" button */
+.index-main .btn-edit {
+    background-color: #343a40;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.index-main .btn-edit:hover {
+    background-color: #292d31;
+}
+.posts{text-align: center;}

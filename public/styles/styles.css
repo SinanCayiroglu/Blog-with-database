@@ -1,0 +1,164 @@
+
+.container{
+    text-align: center;
+	width:80%;
+}
+
+body{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+	background-color: darkgrey;
+}
+
+
+.navbar{
+    background-color:#333;
+    overflow: auto;
+}
+.navbar-inside li{
+    float: left;
+
+    list-style: none;
+}
+
+.navbar-inside li a{
+    color: white;
+    text-decoration: none;
+    padding:10px;
+    transition: all 0.3s ease 0s;
+    font-size: 2rem;
+}
+
+
+.navbar a:hover{
+    background-color:coral;
+}
+
+.searchbar{
+    display: inline-block;
+    float: right;
+    padding-right: 20px;
+   }
+
+.searchbar form{
+    display: inline-block;
+}
+
+.searchbar button{
+    cursor:pointer;
+    transition: all 0.3s ease 0s;
+    background-color:chocolate;
+}
+
+.searchbar button  a{
+    color: white;}
+
+.searchbar button:hover{
+    background-color:darkcyan;
+}
+
+
+footer{text-align: center;
+    list-style: none;
+    background-color:#333;
+    margin-top: auto;
+
+}
+footer li{list-style: none;
+    display: inline-block;
+}
+
+footer p{
+    color: white;
+}
+
+footer .social_icon li a {
+  font-size: 2em;
+  color: #ccc;
+  margin: 0 10px;
+  transition: 0.5s;
+}
+
+footer .social_icon li a:hover {
+    transform: translateY(-15px);
+    color: blue;
+  }
+
+
+
+.feedback-input{
+    width: 100%;
+    padding: 10px;
+    margin: 10px;
+}
+
+textarea{
+    height: 200px;
+}
+
+.form-contact input[type="submit"] {
+    background-color: chocolate;
+    color: white;
+    cursor: pointer;
+    width: 20%;
+    height: 40px;
+}
+
+.creation-form {
+    width: 100%;
+    border: 1px solid #ccc;
+}
+
+.creation-form input,
+.creation-form textarea {
+    width: 80%;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.creation-form input[type="submit"] {
+
+    color: white;
+    cursor: pointer;
+    width: 20%;
+}
+
+.submit-create{
+    background-color:darkgreen;
+}
+
+.submit-edit{
+    background-color: chocolate;
+}
+
+.btn-outline-info{
+    display: block;
+    margin: auto;
+}
+
+.submit-delete{
+    background-color: crimson;
+}
+
+.container button,.container button a{
+    background-color:darkgreen;
+    color: white;
+}
+
+.login-form label{
+    display: block;
+}
+
+.login-form input[type="submit"]{
+    display: block;
+    margin: auto;
+    cursor: pointer;
+
+}
+
+.login-form input{
+    margin-bottom: 10px;
+}
+
