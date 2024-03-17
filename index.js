@@ -7,8 +7,6 @@ const app = express();
 const port = 3000;
 const API_URL = "http://localhost:3000";
 var userIsAuthorised = false;
-let loginDetail = [{id:1,username:"admin",password:"123456"}];
-const posts = [{id:1,author:"Author",title:"Title",content:"Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing."}]
 let id=1;
 app.set('view engine', 'ejs');
 
@@ -251,18 +249,19 @@ app.post("/delete/:idnumber", async function(req, res) {
   try {
     // Check if the user is authorized
     if (userIsAuthorised) {
-      return res.redirect("/unauthorized");
-    }
+      // Delete the post from the database
+      const result = await db.query("DELETE FROM posts WHERE id = $1", [requestedId]);
 
-    // Delete the post from the database
-    const result = await db.query("DELETE FROM posts WHERE id = $1", [requestedId]);
-
-    if (result.rowCount > 0) {
-      // Post deleted successfully, redirect to the home page
-      res.redirect("/");
+      if (result.rowCount > 0) {
+        // Post deleted successfully, redirect to the home page
+        res.redirect("/");
+      } else {
+        // Post not found, redirect to the home page or handle appropriately
+        res.redirect("/");
+      }
     } else {
-      // Post not found, redirect to the home page or handle appropriately
-      res.redirect("/");
+      // User is not authorized, redirect to unauthorized page or handle appropriately
+      res.redirect("/unautharized");
     }
   } catch (error) {
     // Error occurred during database delete operation, render an error view
@@ -270,7 +269,6 @@ app.post("/delete/:idnumber", async function(req, res) {
     res.render("error", { errorMessage: "Failed to delete post" });
   }
 });
-
 // ... (your existing code)
 
 
