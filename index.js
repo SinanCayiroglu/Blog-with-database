@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import ejs from "ejs";
 import pg from "pg";
+import bcrypt from "bcrypt"
 
 const app = express();
 const port = 3000;
@@ -63,16 +64,33 @@ app.get("/contact", (req, res) => {
   app.post("/login", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-    const result = await db.query("SELECT * FROM loginDetail");
-    const loginDetail = result.rows;
-    
-    const user = loginDetail.find((user) => user.username === username && user.password === password);
   
-    if (user) {
-      userIsAuthorised = true;
-      res.redirect("successful-login");
-    } else {
-      res.render("login.ejs", { errorMessage: "Invalid credentials. Please try again." });
+    try {
+      const result = await db.query("SELECT * FROM loginDetail WHERE username = $1", [username]);
+      const user = result.rows[0]; // Assuming username is unique
+  
+      if (user) {
+        // Compare the provided password with the hashed password stored in the database
+        bcrypt.compare(password, user.password, (err, result) => {
+          if (err) {
+            console.error("Error comparing passwords:", err);
+            res.redirect("/error"); // Redirect to an error page or handle error appropriately
+          } else if (result) {
+            // Passwords match, user is authorized
+            userIsAuthorised = true;
+            res.redirect("successful-login");
+          } else {
+            // Passwords don't match, render login page with error message
+            res.render("login.ejs", { errorMessage: "Invalid credentials. Please try again." });
+          }
+        });
+      } else {
+        // User not found, render login page with error message
+        res.render("login.ejs", { errorMessage: "Invalid credentials. Please try again." });
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.redirect("/error"); // Redirect to an error page or handle error appropriately
     }
   });
 
@@ -81,29 +99,40 @@ app.get("/contact", (req, res) => {
   });
   
   app.post("/signup", async (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
-  const result = await db.query("SELECT * FROM loginDetail");
-  const loginDetail = result.rows;
+    const username = req.body.username;
+    const password = req.body.password;
   
-  const userExists = loginDetail.some((user) => user.username === username);
-  
-  if (userExists) {
-    res.send("Username already exists. Choose another username.");
-  } else {
     try {
-      const loginPush = await db.query("INSERT INTO loginDetail (username, password) VALUES ($1, $2) RETURNING *;",
-        [username, password]);
-      res.redirect("/");
+      const result = await db.query("SELECT * FROM loginDetail");
+      const loginDetail = result.rows;
+  
+      const userExists = loginDetail.some((user) => user.username === username);
+      if (userExists) {
+        res.send("Username already exists. Choose another username.");
+      } else {
+        bcrypt.hash(password, 10, async (err, hash) => {
+          if (err) {
+            console.error("Error hashing password:", err);
+            res.redirect("/error"); // Redirect to an error page or handle error appropriately
+          } else {
+            const loginPush = await db.query("INSERT INTO loginDetail (username, password) VALUES ($1, $2) RETURNING *;",
+              [username, hash]); // Store the hashed password in the database
+            res.redirect("/");
+          }
+        });
+      }
     } catch (error) {
       console.error("Error inserting user:", error);
       res.redirect("/error"); // Redirect to an error page or handle error appropriately
     }
-  }
-});
+  });
 
   app.get("/create", (req, res) => {
     res.render("create.ejs")
+  });
+
+  app.get("/mario", (req, res) => {
+    res.render("mario.ejs")
   });
 
   app.get("/project", (req, res) => {
