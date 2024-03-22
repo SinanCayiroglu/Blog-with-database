@@ -151,8 +151,9 @@ app.get("/contact", (req, res) => {
     res.render("javacalc.ejs")
   });
 
-  app.get('/search', (req, res) => {
+  app.get('/search',async (req, res) => {
     const searchTerm = req.query.searchTerm || '';
+    const posts = await getPosts();
     const searchResults = posts.filter(post =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.content.toLowerCase().includes(searchTerm.toLowerCase())
