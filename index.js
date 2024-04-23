@@ -167,9 +167,13 @@ app.get("/contact", (req, res) => {
 
 app.post("/create", async(req,res)=>{
   if(userIsAuthorised){
-    id+=1
+     const result = await db.query("SELECT MAX(id) AS max_id FROM posts");
+    const maxId = result.rows[0].max_id || 0; // If no posts exist, set maxId to 0
+
+    // Increment the maximum ID by one to generate a new unique ID
+    const newId = maxId + 1;
     const post = {
-        id:id,
+        id:newId,
         author: req.body.author,
         title: req.body.title,
         content: req.body.content
