@@ -151,15 +151,18 @@ app.get("/contact", (req, res) => {
     res.render("javacalc.ejs")
   });
 
-  app.get('/search',async (req, res) => {
-    const searchTerm = req.query.searchTerm || '';
-    const posts = await getPosts();
-    const searchResults = posts.filter(post =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+ app.get('/search',async (req, res) => {
+    try{const searchTerm = req.query.searchTerm || '';
+    const query = "SELECT * FROM posts WHERE lower(title) LIKE $1 or lower(content) LIKE $1"
+    const result = await db.query(query, [`%${searchTerm.toLowerCase()}%`]);
+    const searchResults = result.rows;
   
-    res.render('searchResults', { searchResults, searchTerm });
+    res.render('searchResults', { searchResults, searchTerm });}
+    catch(error){
+      console.log(error)
+      res.render("error")
+    }
+    
   });
 
 
