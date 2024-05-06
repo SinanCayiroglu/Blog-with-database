@@ -2,33 +2,110 @@ import express from "express";
 import bodyParser from "body-parser";
 import ejs from "ejs";
 import pg from "pg";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import passport from "passport";
+import localStrategy from "passport-local";
+import session from "express-session";
+import connectPgSimple from 'connect-pg-simple';
+
+const pgSession = connectPgSimple(session);
+
+dotenv.config();
 
 const app = express();
 const port = 3000;
 const API_URL = "http://localhost:3000";
-var userIsAuthorised = false;
-let id=1;
-app.set('view engine', 'ejs');
+let id = 1;
+app.set("view engine", "ejs");
 
 const db = new pg.Client({
   user: "blogwebapp_user",
   host: "dpg-cnqqsda1hbls73dserag-a.frankfurt-postgres.render.com",
   database: "blogwebapp",
   password: "Fe2acZyC5sfPhgoPDKObWGUcTyYHPnEl",
-  port: 5432,
   ssl: {
-    rejectUnauthorized: false // This is required for render.com's SSL configuration
-  }
+    rejectUnauthorized: false, // This is required for render.com's SSL configuration
+  },
 });
 db.connect()
-  .then(() => console.log('Connected to the PostgreSQL database'))
-  .catch(err => console.error('Error connecting to the database', err));
+  .then(() => console.log("Connected to the PostgreSQL database"))
+  .catch((err) => console.error("Error connecting to the database", err));
 
+  passport.use(new localStrategy(async function verify(username, password, cb) {
+    try {
+      const result = await db.query(`SELECT * FROM logindetail WHERE username = $1`, [username]);
+      if (result.rows.length === 0) {
+        return cb(null, false, { message: "Incorrect username or password" });
+      }
+      const row = result.rows[0];
+      bcrypt.compare(password, row.password, (err, result) => {
+        if (err) {
+          console.error("Error comparing passwords:", err);
+          return cb(null, false, { message: "Failed to compare passwords" });
+        } else if (result) {
+          // Passwords match, user is authorized
+          return cb(null, row);
+        } else {
+          // Passwords don't match, render login page with error message
+          return cb(null, false, { message: "Invalid credentials. Please try again." });
+        }
+      });
+    } catch (err) {
+      return cb(err);
+    }
+  }));
+
+  app.use(
+    session({
+      secret: 'keyboard cat',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { 
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+        secure: false  }
+    })
+  ); 
+  app.use(passport.initialize());
+  app.use(passport.session());
+  passport.serializeUser(function(user, cb) {
+    cb(null, user.id);
+  });
+  
+  // passport.deserializeUser(function(id, cb) {
+  //   // Retrieve user from the database based on the provided ID
+  //   // Example assuming you have a `User` model:
+  //   db.query('SELECT * FROM users WHERE id = $1', [id], function(err, result) {
+  //     if (err) { return cb(err); }
+  //     cb(null, user);
+  //   });
+  // });
+  passport.deserializeUser(function(id, done) {
+   db.query('SELECT * FROM logindetail WHERE id = $1', [id], function(err, result) {
+      if(err)
+        return done(err, user);
+      if(result.rows.length > 0){
+        const user = result.rows[0];
+        done(null, user)
+      }else{done(null, false)}
+    });
+  });
+
+
+  // Custom middleware to check if the user is authenticated
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+      // If the user is authenticated, allow the request to proceed
+    return next();
+  } else {
+    // If the user is not authenticated, redirect to the login page
+    res.redirect("/unauthorized");
+  }
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.static("public"))
+app.use(express.static("public"));
 
 async function getPosts() {
   const result = await db.query("SELECT * FROM posts");
@@ -46,192 +123,165 @@ app.get("/", async (req, res) => {
 });
 
 app.get("/about", (req, res) => {
-    res.render("about.ejs")
-  });
+  res.render("about.ejs");
+});
 
 app.get("/contact", (req, res) => {
-    res.render("contact.ejs")
-  });
+  res.render("contact.ejs");
+});
 
-  app.get("/login", (req, res) => {
-    res.render("login.ejs");
-  });
+app.get("/login", (req, res) => {
+  res.render("login.ejs");
+});
 
-  app.get("/successful-login", (req, res) => {
-    res.render("successful-login.ejs");
-  });
+app.get("/successful-login", (req, res) => {
+  res.render("successful-login.ejs");
+});
 
-  app.post("/login", async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+app.post("/login",passport.authenticate('local', { failureRedirect: '/login',successRedirect:"/" }), async (req, res) => {
   
-    try {
-      const result = await db.query("SELECT * FROM loginDetail WHERE username = $1", [username]);
-      const user = result.rows[0]; // Assuming username is unique
-  
-      if (user) {
-        // Compare the provided password with the hashed password stored in the database
-        bcrypt.compare(password, user.password, (err, result) => {
-          if (err) {
-            console.error("Error comparing passwords:", err);
-            res.redirect("/error"); // Redirect to an error page or handle error appropriately
-          } else if (result) {
-            // Passwords match, user is authorized
-            userIsAuthorised = true;
-            res.redirect("successful-login");
-          } else {
-            // Passwords don't match, render login page with error message
-            res.render("login.ejs", { errorMessage: "Invalid credentials. Please try again." });
-          }
-        });
-      } else {
-        // User not found, render login page with error message
-        res.render("login.ejs", { errorMessage: "Invalid credentials. Please try again." });
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.redirect("/error"); // Redirect to an error page or handle error appropriately
+});
+
+app.get("/signup", (req, res) => {
+  res.render("signup.ejs");
+});
+
+app.post("/signup", async (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+
+  try {
+    const result = await db.query("SELECT * FROM loginDetail");
+    const loginDetail = result.rows;
+
+    const userExists = loginDetail.some((user) => user.username === username);
+    if (userExists) {
+      res.send("Username already exists. Choose another username.");
+    } else {
+      bcrypt.hash(password, 10, async (err, hash) => {
+        if (err) {
+          console.error("Error hashing password:", err);
+          res.redirect("/error"); // Redirect to an error page or handle error appropriately
+        } else {
+          const loginPush = await db.query(
+            "INSERT INTO loginDetail (username, password) VALUES ($1, $2) RETURNING *;",
+            [username, hash]
+          ); // Store the hashed password in the database
+          res.redirect("/");
+        }
+      });
     }
-  });
+  } catch (error) {
+    console.error("Error inserting user:", error);
+    res.redirect("/error"); // Redirect to an error page or handle error appropriately
+  }
+});
 
-  app.get("/signup", (req, res) => {
-    res.render("signup.ejs");
-  });
-  
-  app.post("/signup", async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-  
-    try {
-      const result = await db.query("SELECT * FROM loginDetail");
-      const loginDetail = result.rows;
-  
-      const userExists = loginDetail.some((user) => user.username === username);
-      if (userExists) {
-        res.send("Username already exists. Choose another username.");
-      } else {
-        bcrypt.hash(password, 10, async (err, hash) => {
-          if (err) {
-            console.error("Error hashing password:", err);
-            res.redirect("/error"); // Redirect to an error page or handle error appropriately
-          } else {
-            const loginPush = await db.query("INSERT INTO loginDetail (username, password) VALUES ($1, $2) RETURNING *;",
-              [username, hash]); // Store the hashed password in the database
-            res.redirect("/");
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error inserting user:", error);
-      res.redirect("/error"); // Redirect to an error page or handle error appropriately
-    }
-  });
+app.get("/create",ensureAuthenticated, (req, res) => {
+  res.render("create.ejs");
+});
 
-  app.get("/create", (req, res) => {
-    res.render("create.ejs")
-  });
+app.get("/mario", (req, res) => {
+  res.render("mario.ejs");
+});
 
-  app.get("/mario", (req, res) => {
-    res.render("mario.ejs")
-  });
+app.get("/project", (req, res) => {
+  res.render("project.ejs");
+});
 
-  app.get("/project", (req, res) => {
-    res.render("project.ejs")
-  });
+app.get("/success", (req, res) => {
+  res.render("success.ejs");
+});
 
-  app.get("/success", (req, res) => {
-    res.render("success.ejs")
-  });
+app.get("/unautharized", (req, res) => {
+  res.render("unautharized.ejs");
+});
 
-  app.get("/unautharized", (req, res) => {
-    res.render("unautharized.ejs")
-  });
+app.get("/javacalc", (req, res) => {
+  res.render("javacalc.ejs");
+});
 
-  app.get("/javacalc", (req, res) => {
-    res.render("javacalc.ejs")
-  });
-
- app.get('/search',async (req, res) => {
-    try{const searchTerm = req.query.searchTerm || '';
-    const query = "SELECT * FROM posts WHERE lower(title) LIKE $1 or lower(content) LIKE $1"
+app.get("/search", async (req, res) => {
+  try {
+    const searchTerm = req.query.searchTerm || "";
+    const query =
+      "SELECT * FROM posts WHERE lower(title) LIKE $1 or lower(content) LIKE $1";
     const result = await db.query(query, [`%${searchTerm.toLowerCase()}%`]);
     const searchResults = result.rows;
+
+    res.render("searchResults", { searchResults, searchTerm });
+  } catch (error) {
+    console.log(error);
+    res.render("error");
+  }
+});
+
+
+app.post("/create",ensureAuthenticated, async (req, res) => {
   
-    res.render('searchResults', { searchResults, searchTerm });}
-    catch(error){
-      console.log(error)
-      res.render("error")
-    }
-    
-  });
-
-
-
-
-app.post("/create", async(req,res)=>{
-  if(userIsAuthorised){
-     const result = await db.query("SELECT MAX(id) AS max_id FROM posts");
+    const result = await db.query("SELECT MAX(id) AS max_id FROM posts");
     const maxId = result.rows[0].max_id || 0; // If no posts exist, set maxId to 0
 
     // Increment the maximum ID by one to generate a new unique ID
     const newId = maxId + 1;
     const post = {
-        id:newId,
-        author: req.body.author,
-        title: req.body.title,
-        content: req.body.content
-      };
-    
-      const postPush = await db.query("INSERT INTO posts (id,author,title,content) VALUES($1,$2,$3,$4) RETURNING *;",
-      [post.id, post.author, post.title, post.content])
-      
-    
-      res.redirect("/success");}
-      else {
-      res.redirect("/unautharized")}
-  })
-  
-  app.get("/posts/:idnumber", async function(req, res) {
-    const requestedId = parseInt(req.params.idnumber);
-  
-    try {
-      // Query the database for the post with the requested ID
-      const queryResult = await db.query('SELECT * FROM posts WHERE id = $1', [requestedId]);
-      
-      if (queryResult.rowCount > 0) {
-        // Post found, render the post view with the retrieved post data
-        const post = queryResult.rows[0];
-        res.render("post", {
-          id: post.id,
-          author: post.author,
-          title: post.title,
-          content: post.content
-        });
-      } else {
-        // Post not found, render an error view
-        res.render("error", { errorMessage: "Post not found" });
-      }
-    } catch (error) {
-      // Error occurred during database query, render an error view
-      console.error('Error fetching post from database:', error);
-      res.render("error", { errorMessage: "Internal server error" });
-    }
-  });
-  
-  
+      id: newId,
+      author: req.body.author,
+      title: req.body.title,
+      content: req.body.content,
+    };
 
+    const postPush = await db.query(
+      "INSERT INTO posts (id,author,title,content) VALUES($1,$2,$3,$4) RETURNING *;",
+      [post.id, post.author, post.title, post.content]
+    );
+    res.redirect("/")
+  
+});
+
+
+app.get("/posts/:idnumber", async function (req, res) {
+  const requestedId = parseInt(req.params.idnumber);
+
+  try {
+    // Query the database for the post with the requested ID
+    const queryResult = await db.query("SELECT * FROM posts WHERE id = $1", [
+      requestedId,
+    ]);
+
+    if (queryResult.rowCount > 0) {
+      // Post found, render the post view with the retrieved post data
+      const post = queryResult.rows[0];
+      res.render("post", {
+        id: post.id,
+        author: post.author,
+        title: post.title,
+        content: post.content,
+      });
+    } else {
+      // Post not found, render an error view
+      res.render("error", { errorMessage: "Post not found" });
+    }
+  } catch (error) {
+    // Error occurred during database query, render an error view
+    console.error("Error fetching post from database:", error);
+    res.render("error", { errorMessage: "Internal server error" });
+  }
+});
 
 // ... (your existing code)
 
 // Add the following routes for editing and deleting posts:
 
 // Edit post route
-app.get("/edit/:idnumber", async function(req, res) {
+app.get("/edit/:idnumber", async function (req, res) {
   const requestedId = parseInt(req.params.idnumber);
 
   try {
     // Query the database for the post to edit based on its ID
-    const result = await db.query("SELECT * FROM posts WHERE id = $1", [requestedId]);
+    const result = await db.query("SELECT * FROM posts WHERE id = $1", [
+      requestedId,
+    ]);
     const postToEdit = result.rows[0]; // Assuming ID is unique, so we expect only one row
 
     if (postToEdit) {
@@ -243,22 +293,18 @@ app.get("/edit/:idnumber", async function(req, res) {
     }
   } catch (error) {
     // Error occurred during database query, render an error view
-    console.error('Error fetching post to edit:', error);
+    console.error("Error fetching post to edit:", error);
     res.render("error", { errorMessage: "Internal server error" });
   }
 });
 
 // Update post route (after editing)
-app.post("/update/:idnumber", async function(req, res) {
+app.post("/update/:idnumber",ensureAuthenticated, async function (req, res) {
   const requestedId = parseInt(req.params.idnumber);
   const { author, title, content } = req.body;
 
   try {
     // Check if the user is authorized
-    if (userIsAuthorised) {
-      return res.redirect("/unauthorized");
-    }
-
     // Update the post in the database
     const result = await db.query(
       "UPDATE posts SET author = $1, title = $2, content = $3 WHERE id = $4 RETURNING *",
@@ -280,14 +326,16 @@ app.post("/update/:idnumber", async function(req, res) {
 });
 
 // Delete post route
-app.post("/delete/:idnumber", async function(req, res) {
+app.post("/delete/:idnumber", async function (req, res) {
   const requestedId = parseInt(req.params.idnumber);
 
   try {
     // Check if the user is authorized
-    if (userIsAuthorised) {
+    
       // Delete the post from the database
-      const result = await db.query("DELETE FROM posts WHERE id = $1", [requestedId]);
+      const result = await db.query("DELETE FROM posts WHERE id = $1", [
+        requestedId,
+      ]);
 
       if (result.rowCount > 0) {
         // Post deleted successfully, redirect to the home page
@@ -296,10 +344,7 @@ app.post("/delete/:idnumber", async function(req, res) {
         // Post not found, redirect to the home page or handle appropriately
         res.redirect("/");
       }
-    } else {
-      // User is not authorized, redirect to unauthorized page or handle appropriately
-      res.redirect("/unautharized");
-    }
+     
   } catch (error) {
     // Error occurred during database delete operation, render an error view
     console.error("Error deleting post:", error);
@@ -308,11 +353,8 @@ app.post("/delete/:idnumber", async function(req, res) {
 });
 // ... (your existing code)
 
-
-app.post("/submit",(req,res)=>{
-
-})
+app.post("/submit", (req, res) => {});
 
 app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-  });
+  console.log(`Listening on port ${port}`);
+});
