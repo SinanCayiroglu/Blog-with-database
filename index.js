@@ -3,7 +3,6 @@ import bodyParser from "body-parser";
 import ejs from "ejs";
 import pg from "pg";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
 import passport from "passport";
 import localStrategy from "passport-local";
 import session from "express-session";
@@ -11,7 +10,6 @@ import connectPgSimple from 'connect-pg-simple';
 
 const pgSession = connectPgSimple(session);
 
-dotenv.config();
 
 const app = express();
 const port = 3000;
